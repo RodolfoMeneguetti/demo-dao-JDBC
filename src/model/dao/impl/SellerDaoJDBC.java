@@ -66,11 +66,53 @@ public class SellerDaoJDBC implements SellerDao {
 
 	@Override
 	public void update(Seller obj) {
-
+			
+		PreparedStatement st = null;
+		
+		try {
+			st = conn.prepareStatement("UPDATE seller\r\n"
+					+ "SET Name = ?, Email = ?, BirthDate = ?, BaseSalary = ?, DepartmentId = ?\r\n"
+					+ "WHERE Id = ?");
+		
+			st.setString(1, obj.getName());
+			st.setString(2, obj.getEmail());
+			st.setDate(3, new java.sql.Date(obj.getBirthDate().getTime()));
+			st.setDouble(4, obj.getBaseSalary());
+			st.setInt(5, obj.getDepartment().getId());
+			st.setInt(6, obj.getId());
+			
+			st.executeUpdate();
+			
+		}catch(SQLException e) {
+			throw new DbException(e.getMessage());
+		}
+		
+		finally {
+			DB.closeStatement(st);
+		}
 	}
 
 	@Override
 	public void deleteById(Integer id) {
+		
+		PreparedStatement st = null;
+		try {
+			st = conn.prepareStatement("DELETE FROM seller WHERE Id = ?");
+			
+			st.setInt(1, id);
+			
+			int rows = st.executeUpdate();
+			
+			if (rows == 0) {
+				throw new DbException("Invalid ID deleted !");
+			}
+			
+		}catch(SQLException e) {
+			throw new DbException(e.getMessage());
+		}
+		finally {
+			DB.closeStatement(st);
+		}
 
 	}
 
@@ -79,7 +121,6 @@ public class SellerDaoJDBC implements SellerDao {
 
 		PreparedStatement st = null;
 		ResultSet rs = null;
-		System.out.println("Iniciando Leitura!");
 		try {
 			st = conn.prepareStatement("SELECT seller.*,department.Name as DepName "
 					+ "FROM seller INNER JOIN department ON seller.DepartmentId = "
